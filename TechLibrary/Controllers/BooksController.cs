@@ -6,6 +6,9 @@ using AutoMapper;
 using TechLibrary.Domain;
 using TechLibrary.Models;
 using TechLibrary.Services;
+using TechLibrary.Contracts.Requests;
+using System;
+using System.Net;
 
 namespace TechLibrary.Controllers
 {
@@ -47,5 +50,47 @@ namespace TechLibrary.Controllers
 
             return Ok(bookResponse);
         }
+
+        //This task calls the get books by page and forms the response for the js to use
+        [HttpPost()]
+        public async Task<ActionResult<BookResponse>> GetBooks(BookByPageRequest data)
+        {
+            _logger.LogInformation($"Get {data.PerPage} books");
+
+            var books = await _bookService.GetBooksByPageAsync(data.CurrentPage, data.PerPage, data.Filter);
+
+            var response = new BookByPageResponse
+            {
+                TotalRecords = books.TotalRecords,
+                Books = _mapper.Map<List<BookResponse>>(_mapper.Map<List<BookResponse>>(books.Books))
+            };
+
+            return Ok(response);
+        }
+
+        //This task calls update book and processes the update
+        [HttpPost("Update")]
+        public async Task<IActionResult> UpdateBook(Book book)
+        {
+            _logger.LogInformation($"Update BookId: {book.BookId}");
+
+            await _bookService.UpdateBookAsync(book);
+
+            return Ok();
+
+
+        }
+
+        //Simple task that calls add book functionality
+        [HttpPost("{Add}")]
+        public async Task<IActionResult> AddBook(Book book)
+        {
+            _logger.LogInformation("Add New Book");
+
+            await _bookService.AddBookAsync(book);
+
+            return Ok();
+        }
+
     }
 }
